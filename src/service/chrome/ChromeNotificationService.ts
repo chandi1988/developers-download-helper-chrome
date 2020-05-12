@@ -2,7 +2,7 @@ import {singleton} from "tsyringe";
 
 @singleton()
 export class ChromeNotificationService {
-    private notifications = [];
+    private static notifications = [];
 
     public showErrorNotification(title: string, message: string) {
         this.clearNotifications();
@@ -17,7 +17,7 @@ export class ChromeNotificationService {
             requireInteraction: true,
         });
 
-        this.notifications.push(notificationId);
+        ChromeNotificationService.notifications.push(notificationId);
     }
 
     public showProgressNotification(progress: number, title: string, message: string): string {
@@ -32,7 +32,7 @@ export class ChromeNotificationService {
             requireInteraction: false
         });
 
-        this.notifications.push(notificationId);
+        ChromeNotificationService.notifications.push(notificationId);
 
         return notificationId;
     }
@@ -49,8 +49,8 @@ export class ChromeNotificationService {
     }
 
     public clearNotifications(): void {
-        while (this.notifications.length > 0) {
-            const id = this.notifications.shift();
+        while (ChromeNotificationService.notifications.length > 0) {
+            const id = ChromeNotificationService.notifications.shift();
             chrome.notifications.clear(id);
         }
     }

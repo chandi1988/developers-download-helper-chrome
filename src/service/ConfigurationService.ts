@@ -99,7 +99,11 @@ export class ConfigurationService {
     public async getDownloaderCustomConfiguration(downloaderId: string): Promise<DownloaderConfiguration> {
         let configuration = await this.getConfiguration();
 
-        return configuration.downloader.get(downloaderId) || null;
+        if (configuration && configuration.downloader) {
+            return configuration.downloader.get(downloaderId);
+        }
+
+        return null;
     }
 
     private isValidContextMenuItemConfiguration(menuItemConfiguration: ContextMenuItemConfiguration) {

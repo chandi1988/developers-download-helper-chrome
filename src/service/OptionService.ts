@@ -1,45 +1,33 @@
 import {inject, singleton} from "tsyringe";
-import {HtmlOptionsService} from "./option/HtmlOptionsService";
-import {HtmlDocumentService} from "./option/HtmlDocumentService";
-import {HtmlStatusService} from "./option/HtmlStatusService";
+import {HTMLStatusHandler} from "./option/HTMLStatusHandler";
+import {OptionsDisplayService} from "./option/OptionsDisplayService";
 
 @singleton()
 export class OptionService {
-    private static readonly STATUS_ELEMENT_ID = "status";
-    private static readonly SAVE_ELEMENT_ID = "save";
-    private static readonly CONTENT_ELEMENT_ID = "content";
 
     public constructor(
-        @inject(HtmlOptionsService) private readonly optionsDisplayService: HtmlOptionsService,
-        @inject(HtmlDocumentService) private readonly htmlDocumentService: HtmlDocumentService,
-        @inject(HtmlStatusService) private readonly htmlStatusService: HtmlStatusService
+        @inject(OptionsDisplayService) private optionsDisplayService: OptionsDisplayService
     ) {
     }
 
     public async showAndHandleOptions(): Promise<void> {
+        const statusHandler = new HTMLStatusHandler(document, "status", chrome.runtime.getManifest().homepage_url);
+
         try {
-            const contentElement: HTMLDivElement = <HTMLDivElement>this.htmlDocumentService
-                .getElement(OptionService.CONTENT_ELEMENT_ID);
+            const contentElement: HTMLDivElement = <HTMLDivElement>document.getElementById("content");
             await this.optionsDisplayService.showOptionsHtml(contentElement);
 
-            this.htmlDocumentService.onClick(OptionService.SAVE_ELEMENT_ID, async () => {
+            document.getElementById("save").addEventListener('click', async () => {
                 try {
                     await this.optionsDisplayService.saveUpdatedOptions(contentElement);
-                    this.showStatus("Options saved");
+                    statusHandler.showStatus("Options saved");
                 } catch (error) {
-                    this.showStatus("Save options failed", error);
+                    statusHandler.showStatus("Save options failed", error);
                 }
             });
         } catch (error) {
-            this.showStatus("Unexpected error", error);
+            statusHandler.showStatus("Unexpected error", error);
         }
-    }
-
-    private showStatus(message: string, details?: any): void {
-        let statusElement: HTMLDivElement = <HTMLDivElement>this.htmlDocumentService
-            .getElement(OptionService.STATUS_ELEMENT_ID);
-
-        this.htmlStatusService.showStatus(statusElement, message, details);
     }
 
 }

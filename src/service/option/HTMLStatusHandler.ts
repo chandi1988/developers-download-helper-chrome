@@ -1,22 +1,29 @@
-import {inject, singleton} from "tsyringe";
-import {ChromeRuntimeService} from "../chrome/ChromeRuntimeService";
+import {IllegalArgumentException} from "../../exception/IllegalArgumentException";
 
-@singleton()
-export class HtmlStatusService {
+export class HTMLStatusHandler {
+    private readonly statusElement: HTMLDivElement;
+    private readonly url: string;
 
-    constructor(
-        @inject(ChromeRuntimeService) private readonly chromeRuntimeService: ChromeRuntimeService
-    ) {
+    constructor(htmlDocument: Document, statusWrapperId: string, url: string) {
+        let wrapperElement = <HTMLDivElement>htmlDocument.getElementById(statusWrapperId);
+
+        if (!wrapperElement) {
+            throw new IllegalArgumentException("Could not get status element");
+        }
+
+        this.url = url;
+        this.statusElement = wrapperElement;
     }
 
-    public showStatus(statusElement: HTMLDivElement, message: string, details?: any): void {
+
+    public showStatus(message: string, details?: any): void {
         let backgroundColor = "green";
-        statusElement.style.display = "inline-block";
+        this.statusElement.style.display = "inline-block";
 
         let detailContent = "";
         if (!details) {
-            setTimeout((): void => {
-                statusElement.style.display = "none";
+            setTimeout(() => {
+                this.statusElement.style.display = "none";
             }, 750);
         } else {
             backgroundColor = "red";
@@ -32,8 +39,6 @@ export class HtmlStatusService {
                 }
             }
 
-            const url = this.chromeRuntimeService.getHomePageUrl();
-
             detailContent += `<div style="display: inline; font-size: 0.6em;"> Details below ...</div>
                 <div style="width: 100%;
                     position: absolute;
@@ -47,12 +52,12 @@ export class HtmlStatusService {
                         color: white;" rows="2" disabled>${JSON.stringify(messageDetails)}</textarea>
                     <div style="padding: 1em;">
                          If you think this behaviour is incorrect, report this issue:
-                         <a href="${url}">${url}</a>
+                         <a href="${this.url}">${this.url}</a>
                     </div>
                 </div>`;
         }
 
-        statusElement.innerHTML = `<div class="status" style="font-size: 0.8em;
+        this.statusElement.innerHTML = `<div class="status" style="font-size: 0.8em;
             display: inline-block;
             color: white;
             padding: 0.4em;
@@ -60,5 +65,4 @@ export class HtmlStatusService {
             margin-left: 1em;
             background: ${backgroundColor}">${message}</div>${detailContent}`;
     }
-
 }
